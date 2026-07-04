@@ -1,0 +1,28 @@
+# Android
+.gradle/
+local.properties
+*.iml
+
+# Kotlin
+build/
+
+# Node
+node_modules/
+.next/
+dist/
+
+# Firebase
+.firebase/
+.firebase-cache/
+
+# IDE
+.idea/
+.vscode/
+.DS_Store
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.*
