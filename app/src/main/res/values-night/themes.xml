@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.FinanceAI" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Dark theme customization will be expanded in the Design System phase -->
+    </style>
+</resources>
