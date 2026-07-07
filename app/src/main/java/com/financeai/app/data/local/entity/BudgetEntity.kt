@@ -1,0 +1,23 @@
+package com.financeai.app.data.local.entity
+
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity(tableName = "budgets")
+data class BudgetEntity(
+
+    @PrimaryKey
+    val id: String,
+
+    val category: String,
+
+    val monthlyLimit: Double,
+
+    val currentSpent: Double,
+
+    val startDate: Long,
+
+    val endDate: Long,
+
+    val active: Boolean = true
+)
