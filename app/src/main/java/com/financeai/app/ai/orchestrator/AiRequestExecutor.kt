@@ -4,6 +4,7 @@ import com.financeai.app.ai.cache.AiCacheManager
 import com.financeai.app.ai.model.AiAnalysisResult
 import com.financeai.app.ai.provider.AiProviderManager
 import com.financeai.app.ai.usage.AiUsageTracker
+import java.time.Duration
 
 /**
  * Executes a single AI request.
@@ -13,9 +14,6 @@ import com.financeai.app.ai.usage.AiUsageTracker
  * - Provider execution
  * - Usage tracking
  * - Cache update
- *
- * Business rules and permissions are handled
- * by the orchestrator before reaching here.
  */
 class AiRequestExecutor(
 
@@ -27,53 +25,40 @@ class AiRequestExecutor(
 
 ) {
 
-    /**
-     * Executes one AI request.
-     */
     suspend fun execute(
 
         context: AiExecutionContext
 
     ): AiExecutionResult {
 
-        // -------------------------
-        // Cache Lookup
-        // -------------------------
-
         if (context.cacheEnabled) {
 
-            val cached = cacheManager.get(
+            cacheManager.get(
 
                 context.request
 
-            )
-
-            if (cached != null) {
+            )?.let { cached ->
 
                 return AiExecutionResult(
 
                     executionId = context.executionId,
 
-                    success = true,
-
                     result = cached,
+
+                    success = true,
 
                     cacheHit = true,
 
-                    executionTime = java.time.Duration.ZERO,
+                    executionTime = Duration.ZERO,
 
-                    providerTokens = 0,
+                    providerTokens = cached.tokenUsage,
 
                     userCredits = 0,
 
-                    estimatedCost = 0.0
+                    estimatedCost = cached.estimatedCost
                 )
             }
         }
-
-        // -------------------------
-        // Provider Execution
-        // -------------------------
 
         val started = System.nanoTime()
 
@@ -81,87 +66,57 @@ class AiRequestExecutor(
 
             providerManager.execute(
 
-                provider = context.provider,
+                context.request,
 
-                model = context.model,
+                context.provider,
 
-                request = context.request
+                context.model
             )
 
         val duration =
 
-            java.time.Duration.ofNanos(
+            Duration.ofNanos(
 
                 System.nanoTime() - started
             )
-
-        // -------------------------
-        // Usage Tracking
-        // -------------------------
 
         if (context.usageTrackingEnabled) {
 
             usageTracker.record(
 
-                context = context,
+                context,
 
-                result = providerResult
+                providerResult
             )
         }
-
-        // -------------------------
-        // Cache Update
-        // -------------------------
 
         if (context.saveToCache) {
 
             cacheManager.put(
 
-                request = context.request,
+                context.request,
 
-                response = providerResult
+                providerResult
             )
         }
-
-        // -------------------------
-        // Final Result
-        // -------------------------
 
         return AiExecutionResult(
 
             executionId = context.executionId,
 
-            success = true,
-
             result = providerResult,
+
+            success = providerResult.success,
 
             cacheHit = false,
 
             executionTime = duration,
 
-            providerTokens =
+            providerTokens = providerResult.tokenUsage,
 
-                providerResult.metadata["totalTokens"]
+            userCredits = 0,
 
-                    ?.toIntOrNull()
-
-                    ?: 0,
-
-            userCredits =
-
-                providerResult.metadata["credits"]
-
-                    ?.toIntOrNull()
-
-                    ?: 0,
-
-            estimatedCost =
-
-                providerResult.metadata["cost"]
-
-                    ?.toDoubleOrNull()
-
-                    ?: 0.0
+            estimatedCost = providerResult.estimatedCost
         )
     }
 }
