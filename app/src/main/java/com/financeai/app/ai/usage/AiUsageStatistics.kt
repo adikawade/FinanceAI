@@ -1,82 +1,149 @@
 package com.financeai.app.ai.usage
 
+import com.financeai.app.ai.model.AiProvider
+
 /**
- * AI usage analytics.
+ * Aggregated AI usage statistics.
  *
  * Used by:
  * - User Dashboard
  * - Admin Dashboard
- * - AI Analytics
+ * - Analytics
+ * - Billing
+ * - Cost Monitoring
  */
 data class AiUsageStatistics(
 
     /**
+     * User id.
+     */
+    val userId: String,
+
+    /**
      * Total AI requests.
      */
-    val totalRequests: Long = 0,
+    val totalRequests: Long,
 
     /**
      * Successful requests.
      */
-    val successfulRequests: Long = 0,
+    val successfulRequests: Long,
 
     /**
      * Failed requests.
      */
-    val failedRequests: Long = 0,
+    val failedRequests: Long,
 
     /**
-     * Cache hits.
+     * Cached responses.
      */
-    val cacheHits: Long = 0,
+    val cacheHits: Long,
 
     /**
-     * Cache misses.
+     * Non cached responses.
      */
-    val cacheMisses: Long = 0,
+    val cacheMisses: Long,
 
     /**
-     * User AI credits consumed.
+     * Total user credits consumed.
      */
-    val creditsUsed: Long = 0,
+    val totalUserTokens: Long,
 
     /**
-     * Remaining user credits.
+     * Total provider tokens consumed.
      */
-    val creditsRemaining: Long = 0,
+    val totalProviderTokens: Long,
 
     /**
-     * Provider tokens consumed.
+     * Total provider cost.
      */
-    val providerTokensUsed: Long = 0,
+    val totalProviderCost: Double,
 
     /**
-     * Estimated provider cost.
+     * Average execution time.
      */
-    val estimatedCost: Double = 0.0,
+    val averageProcessingTimeMs: Double,
 
     /**
-     * Tokens saved due to cache.
+     * Most frequently used provider.
      */
-    val tokensSaved: Long = 0,
+    val favouriteProvider: AiProvider? = null
+) {
 
     /**
-     * Estimated money saved by cache.
+     * Cache hit percentage.
      */
-    val estimatedCostSaved: Double = 0.0,
+    val cacheHitRate: Double
+        get() {
+
+            val total = cacheHits + cacheMisses
+
+            return if (total == 0L) {
+
+                0.0
+
+            } else {
+
+                cacheHits.toDouble() / total.toDouble()
+            }
+        }
 
     /**
-     * Average response time.
+     * Success percentage.
      */
-    val averageResponseTimeMs: Long = 0,
+    val successRate: Double
+        get() {
+
+            if (totalRequests == 0L) {
+
+                return 0.0
+            }
+
+            return successfulRequests.toDouble() /
+                    totalRequests.toDouble()
+        }
 
     /**
-     * Total AI chat messages.
+     * Average provider cost per request.
      */
-    val totalChatMessages: Long = 0,
+    val averageRequestCost: Double
+        get() {
+
+            if (totalRequests == 0L) {
+
+                return 0.0
+            }
+
+            return totalProviderCost / totalRequests
+        }
 
     /**
-     * Total SMS categorized.
+     * Average provider tokens per request.
      */
-    val totalSmsProcessed: Long = 0
-)
+    val averageProviderTokens: Double
+        get() {
+
+            if (totalRequests == 0L) {
+
+                return 0.0
+            }
+
+            return totalProviderTokens.toDouble() /
+                    totalRequests.toDouble()
+        }
+
+    /**
+     * Average user credits per request.
+     */
+    val averageUserTokens: Double
+        get() {
+
+            if (totalRequests == 0L) {
+
+                return 0.0
+            }
+
+            return totalUserTokens.toDouble() /
+                    totalRequests.toDouble()
+        }
+}
